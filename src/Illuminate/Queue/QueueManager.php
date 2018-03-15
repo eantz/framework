@@ -129,7 +129,7 @@ class QueueManager extends Manager implements FactoryContract, MonitorContract
         // of the connections are resolved when they are actually needed so we do
         // not make any unnecessary connection to the various queue end-points.
         if (! isset($this->connections[$name])) {
-            $this->connections[$name] = $this->resolve($name);
+            $this->connections[$name] = $this->createDriver($name);
 
             $this->connections[$name]->setContainer($this->app);
         }
@@ -138,16 +138,27 @@ class QueueManager extends Manager implements FactoryContract, MonitorContract
     }
 
     /**
+     * Get a driver instance
+     *
+     * @param  string  $driver
+     * @return mixed
+     */
+    public function driver($driver = null)
+    {
+        return $this->connection($driver);
+    }
+
+    /**
      * Resolve a queue connection.
      *
      * @param  string  $name
      * @return \Illuminate\Contracts\Queue\Queue
      */
-    protected function resolve($name)
+    protected function createDriver($name)
     {
         $config = $this->getConfig($name);
 
-        return $this->getConnector($config['driver'])
+        return $this->callCustomCreator($config['driver'])
                         ->connect($config)
                         ->setConnectionName($name);
     }
@@ -160,7 +171,7 @@ class QueueManager extends Manager implements FactoryContract, MonitorContract
      *
      * @throws \InvalidArgumentException
      */
-    protected function getConnector($driver)
+    protected function callCustomCreator($driver)
     {
         if (! isset($this->connectors[$driver])) {
             throw new InvalidArgumentException("No connector for [$driver]");
@@ -238,6 +249,16 @@ class QueueManager extends Manager implements FactoryContract, MonitorContract
     public function getName($connection = null)
     {
         return $connection ?: $this->getDefaultDriver();
+    }
+
+    /**
+     * Get all of the created "drivers".
+     *
+     * @return string
+     */
+    public function getDrivers()
+    {
+        return [$this->getName()];
     }
 
     /**
