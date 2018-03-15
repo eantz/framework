@@ -49,20 +49,9 @@ class FilesystemManager extends Manager implements FactoryContract
      * @param  string  $name
      * @return \Illuminate\Contracts\Filesystem\Filesystem
      */
-    public function drive($name = null)
+    public function driver($name = null)
     {
         return $this->disk($name);
-    }
-
-    /**
-     * Get a driver instance.
-     *
-     * @param  string  $driver
-     * @return mixed
-     */
-    public function driver($driver = null)
-    {
-        return $this->drive($driver);
     }
 
     /**
@@ -98,7 +87,7 @@ class FilesystemManager extends Manager implements FactoryContract
      */
     protected function get($name)
     {
-        return $this->disks[$name] ?? $this->resolve($name);
+        return $this->disks[$name] ?? $this->createDriver($name);
     }
 
     /**
@@ -109,7 +98,7 @@ class FilesystemManager extends Manager implements FactoryContract
      *
      * @throws \InvalidArgumentException
      */
-    protected function resolve($name)
+    protected function createDriver($name)
     {
         $config = $this->getConfig($name);
 
@@ -127,18 +116,6 @@ class FilesystemManager extends Manager implements FactoryContract
     }
 
     /**
-     * Create a new driver instance.
-     *
-     * @param  string  $driver
-     * @return mixed
-     *
-     */
-    protected function createDriver($driver)
-    {
-        return $this->resolve($driver);
-    }
-
-    /**
      * Call a custom driver creator.
      *
      * @param  array|string  $config
@@ -148,7 +125,7 @@ class FilesystemManager extends Manager implements FactoryContract
     {
         $driverName = is_array($config) ? $config['driver'] : $config;
 
-        $driver = $this->customCreators[$config['driver']]($this->app, $config);
+        $driver = $this->customCreators[$driverName]($this->app, $config);
 
         if ($driver instanceof FilesystemInterface) {
             return $this->adapt($driver);
