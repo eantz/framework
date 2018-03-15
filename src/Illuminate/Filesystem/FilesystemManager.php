@@ -352,7 +352,7 @@ class FilesystemManager extends Manager implements FactoryContract
      */
     public function getDrivers()
     {
-        return $this->getDefaultDriver();
+        return [$this->getDefaultDriver()];
     }
 
     /**
